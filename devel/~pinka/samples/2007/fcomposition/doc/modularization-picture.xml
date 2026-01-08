@@ -16,20 +16,20 @@
   table div div { margin-bottom: 0.5em;}
 </style>
 
-<title>Модуляризация макетной форт-системы</title>
+<title>Modularization of prototype Forth system</title>
 
 <chapter id="intro">
-<p>Ниже представлено примерное разбиение на модули и их взаимосвязь.
-На этой плоской схеме не выражены все нюансы зависимостей (или, независимостей) отдельных модулей 
-и не приведены многие служебные слова.
+<p>Below is an approximate breakdown into modules and their relationships.
+This flat diagram does not express all the nuances of dependencies (or independencies) of individual modules,
+and many service words are not shown.
 </p>
 </chapter>
 
-<chapter id="picture"><title>Схема</title>
-<p>Каждый модуль (или, механизм) представлен блоком схемы, содержащим название модуля,
-лексикон и, возможно, вложенные модули.
-Модуль основывается на тех модулях,
-на блоки которых распространяется «вес» его блока в схеме.
+<chapter id="picture"><title>Diagram</title>
+<p>Each module (or mechanism) is represented by a diagram block containing the module name,
+vocabulary, and possibly nested modules.
+A module is based on those modules
+to whose blocks the "weight" of its block extends in the diagram.
 </p>
 <br/>
 <table>

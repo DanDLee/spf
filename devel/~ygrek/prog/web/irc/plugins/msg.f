@@ -1,5 +1,5 @@
 \ $Id$
-\ оффлайновые сообщения 
+\ Offline messages 
 
 REQUIRE NOT ~profit/lib/logic.f
 REQUIRE ENSURE ~ygrek/lib/debug/ensure.f

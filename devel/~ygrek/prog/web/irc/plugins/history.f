@@ -1,5 +1,5 @@
 \ $Id$
-\ История сообщений
+\ Message history
 
 MODULE: bot_plugin_history
 

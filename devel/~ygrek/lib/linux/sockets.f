@@ -28,7 +28,7 @@ USER TIMEOUT
 : CloseSocket ( sock -- ior ) 1 <( )) close ?ERR NIP ;
 
 : GetHostIP ( addr u -- IP ior )
-  DUP 0= IF NIP 11004 EXIT THEN \ иначе пустой хост S" " дает 0 0
+  DUP 0= IF NIP 11004 EXIT THEN \ otherwise empty host S" " gives 0 0
   (( OVER )) inet_addr DUP -1 <> IF NIP NIP 0 EXIT ELSE DROP THEN
   DROP 1 <( )) gethostbyname DUP IF 4 CELLS + @ @ @ 0
                          ELSE -1 THEN
@@ -45,7 +45,7 @@ USER TIMEOUT
 : ReadSocket ( addr u s -- rlen ior )
   -ROT 0 4 <( )) recv ?ERR
   OVER 0= IF DROP -1002 THEN
-  ( если принято 0, то обрыв соединения )
+  ( if received 0, then connection broken )
 ;
 
 : WriteSocket ( addr u s -- ior ) -ROT 0 4 <( )) send ?ERR NIP ;

@@ -3,7 +3,7 @@
 REQUIRE NSYM: lib/include/facil.f
 1 NSYM: strerror
 
-\ Преобразуем номер ошибки в строку
+\ Convert error number to string
 : ERRSTR ( n -- adr n )
 strerror ASCIIZ>
 ;

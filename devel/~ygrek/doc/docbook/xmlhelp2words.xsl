@@ -3,16 +3,16 @@
   <xsl:output encoding="windows-1251" method="text"/>
 
   <xsl:template match="forthsourcecode">
-  <xsl:for-each select="module">          <!-- Для каждого файла-->
+  <xsl:for-each select="module">          <!-- For each file-->
 
-    <xsl:for-each select="colon">         <!-- Для каждого определения через двоеточие-->
-    <xsl:if test="@vocabulary='FORTH'">   <!-- Только те что экспортируются в общий словарь-->
+    <xsl:for-each select="colon">         <!-- For each colon definition-->
+    <xsl:if test="@vocabulary='FORTH'">   <!-- Only those exported to the common dictionary-->
 
-      <xsl:value-of select="@name"/>    <!-- Имя слова-->
+      <xsl:value-of select="@name"/>    <!-- Word name-->
       <xsl:text> </xsl:text>
-      <xsl:value-of select="../@name"/>  <!-- Имя файла-->
+      <xsl:value-of select="../@name"/>  <!-- File name-->
       <xsl:text> </xsl:text>
-      <xsl:value-of select="@params"/>  <!-- Стековая нотация-->
+      <xsl:value-of select="@params"/>  <!-- Stack notation-->
       <xsl:text>&#xA;</xsl:text>
 
     </xsl:if>

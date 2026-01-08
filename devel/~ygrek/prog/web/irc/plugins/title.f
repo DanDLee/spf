@@ -1,5 +1,5 @@
 \ $Id$
-\ Обьявление <title> тега ссылок
+\ Declaration of <title> tag for links
 
 REQUIRE $Revision: ~ygrek/lib/fun/kkv.f
 REQUIRE GET-FILE ~ac/lib/lin/curl/curl.f
@@ -45,7 +45,7 @@ MODULE: bot_plugin_title
    DUP STR@
    START{
        xml.load=> DUP
-       XML_DOC_ROOT ?DUP ONTRUE \ корень html
+       XML_DOC_ROOT ?DUP ONTRUE \ html root
        DUP x.name @ ASCIIZ> S" html" COMPARE 0= ONTRUE
        S" head" ROT node@ ?DUP ONTRUE \ head
        ." IN H" DUP XML_NLIST 

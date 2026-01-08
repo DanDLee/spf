@@ -37,7 +37,7 @@ start-readline-history
   (( R> )) free DROP
 
 \  TUCK TO-LOG
-\  EOLN TO-LOG \ Если ввод с user-device записать cr в лог, то есть нажали Enter
+\  EOLN TO-LOG \ If input from user-device, write cr to log, i.e., Enter was pressed
 ;
 
 ' ACCEPT-READLINE TO ACCEPT

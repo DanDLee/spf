@@ -60,6 +60,6 @@ S" CP1251" S" UTF-8" iconv: WIN>UTF
 REQUIRE TESTCASES ~ygrek/lib/testcase.f
 
 TESTCASES UTF>WIN and back
-(( S" Тест" WIN>UTF DUP STR@ S" РўРµСЃС‚" TEST-ARRAY STRFREE -> ))
-(( S" РўРµСЃС‚" UTF>WIN DUP STR@ S" Тест" TEST-ARRAY STRFREE -> ))
+(( S" пїЅпїЅпїЅпїЅ" WIN>UTF DUP STR@ S" Test" TEST-ARRAY STRFREE -> ))
+(( S" Test" UTF>WIN DUP STR@ S" пїЅпїЅпїЅпїЅ" TEST-ARRAY STRFREE -> ))
 END-TESTCASES

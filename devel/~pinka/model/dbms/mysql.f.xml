@@ -140,10 +140,10 @@
 
 <init> 40 1024 * buf::set-buffer-size </init>
 <comment>
-  При сериализации 'таблиц' в XML-форму происходит конкатенация
-  большого числа мелких фрагментов текста. Для уменьшения числа
-  передач, данные вначале объединяются в буфере, а потом, уже
-  большими кусками передаются дальше.
+  When serializing 'tables' to XML form, concatenation of
+  many small text fragments occurs. To reduce the number of
+  transmissions, data is first combined in a buffer, and then
+  transferred in large chunks.
 </comment>
 
 <def name="store-chunk" ds=" addr u -- ">

@@ -16,21 +16,21 @@
 
 
 
-<comment xml:lang="ru">
-  Есть два мотива для сигнатуры функции 'if'
+<comment xml:lang="en">
+  There are two rationales for the signature of the 'if' function
 
-  Мотив 1. В случае структуры IF ELSE THEN код фиксирован, и флаг идет единственным аргументом ( flag -- ).
-  / даграмма стека без учета эффекта от кода / 
-  При передаче потенциально фиксированных значений через стек, их удобней раполагать над другими аргументами
-  (т.е., на вершине стека).
-  Получается сигнатура ( flag xt1 xt2 -- )
+  Rationale 1. In the case of the IF ELSE THEN structure, the code is fixed, and the flag is the only argument ( flag -- ).
+  / stack diagram without considering the effect of the code /
+  When passing potentially fixed values through the stack, it is more convenient to place them above other arguments
+  (i.e., on the top of the stack).
+  This gives the signature ( flag xt1 xt2 -- )
 
-  Мотив 2. Подобные функции в других языках принимают флаг первым аргументом. 
-  И у структуры флаг тоже первый аргумент (т.к. единственный). Такой порядок читабельней, когда вычисление флага фиксированно.
-  Получается сигнатура ( xt1 xt2 flag -- )
+  Rationale 2. Similar functions in other languages accept the flag as the first argument.
+  And in the structure, the flag is also the first argument (since it's the only one). This order is more readable when the flag calculation is fixed.
+  This gives the signature ( xt1 xt2 flag -- )
 
-  Базовым вариантом выбран первый (как и в Факторе).
-  Дополнительным получется второй вариант.
+  The first variant was chosen as the base (as in Factor).
+  The second variant is provided as an alternative.
 </comment>
 
 

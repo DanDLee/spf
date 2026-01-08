@@ -1,5 +1,5 @@
 \ $Id$
-\ Тренировка по освещению
+\ Lighting training
 
 REQUIRE WL-MODULES ~day/lib/includemodule.f
 
