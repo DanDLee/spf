@@ -1,10 +1,10 @@
-( Основные низкоуровневые слова "форт-процессора"
+( Definition of most frequently used "Forth processor" words
   Copyright [C] 1992-1999 A.Cherezov ac@forth.org
-  Преобразование из 16-разрядного в 32-разрядный код - 1995-96гг
-  Ревизия - сентябрь 1999
+  Conversion from 16-bit to 32-bit code - 1995-96
+  Revision - October 1999
 )
 
-( Реализация для подпрограммного шитого кода.
+( Register usage for subroutine-threaded code.
   EAX       Top of Stack
   EBP       Data Stack
  [EBP]      Second item on Stack
@@ -15,10 +15,10 @@
 HEX
 
 \ ================================================================
-\ Стековые манипуляции
+\ Stack operations
 
 CODE DUP ( x -- x x ) \ 94
-\ Продублировать x.
+\ Duplicate x.
      LEA EBP, -4 [EBP]
      MOV [EBP], EAX
      RET
@@ -27,7 +27,7 @@ END-CODE
 ' DUP TO 'DUP_V
 
 CODE 2DUP ( x1 x2 -- x1 x2 x1 x2 ) \ 94
-\ Продублировать пару ячеек x1 x2.
+\ Duplicate cell pair x1 x2.
      MOV EDX, [EBP]
      MOV -4 [EBP], EAX
      MOV -8 [EBP], EDX
@@ -36,7 +36,7 @@ CODE 2DUP ( x1 x2 -- x1 x2 x1 x2 ) \ 94
 END-CODE
 
 CODE DROP ( x -- ) \ 94
-\ Убрать x со стека.
+\ Remove x from the stack.
      MOV EAX, [EBP]
      LEA EBP, 4 [EBP]
      RET
@@ -44,7 +44,7 @@ END-CODE
 ' DROP TO 'DROP_V
 
 CODE MAX ( n1 n2 -- n3 ) \ 94
-\ n3 - большее из n1 и n2.
+\ n3 - the greater of n1 and n2.
 ARCH-P6 [IF]
      MOV     EDX, [EBP]
      CMP     EDX, EAX
@@ -58,7 +58,7 @@ ARCH-P6 [IF]
 END-CODE
 
 CODE MIN ( n1 n2 -- n3 ) \ 94
- \ n3 - меньшее из n1 и n2.
+ \ n3 - the lesser of n1 and n2.
  ARCH-P6 [IF]
      MOV     EDX, [EBP]
      CMP     EDX, EAX
@@ -111,14 +111,14 @@ ARCH-P6 [IF]
 END-CODE
 
 CODE 2DROP ( x1 x2 -- ) \ 94
-\ Убрать со стека пару ячеек x1 x2.
+\ Drop cell pair x1 x2 from the stack.
      MOV EAX, 4 [EBP]
      LEA EBP, 8 [EBP]
      RET
 END-CODE
 
 CODE SWAP ( x1 x2 -- x2 x1 ) \ 94
-\ поменять местами два верхних элемента стека
+\ Exchange the two top stack items
 \     XCHG EAX, [EBP]
      MOV   EDX, [EBP]
      MOV   [EBP], EAX
@@ -127,7 +127,7 @@ CODE SWAP ( x1 x2 -- x2 x1 ) \ 94
 END-CODE
 
 CODE 2SWAP ( x1 x2 x3 x4 -- x3 x4 x1 x2 ) \ 94
-\ Поменять местами две верхние пары ячеек.
+\ Exchange the top two cell pairs.
      MOV ECX, [EBP]
      MOV EDX, 4 [EBP]
      MOV EBX, 8 [EBP]
@@ -139,7 +139,7 @@ CODE 2SWAP ( x1 x2 x3 x4 -- x3 x4 x1 x2 ) \ 94
 END-CODE
 
 CODE OVER ( x1 x2 -- x1 x2 x1 ) \ 94
-\ Положить копию x1 на вершину стека.
+\ Place a copy of x1 on top of stack.
      LEA EBP, -4 [EBP]
      MOV [EBP], EAX
      MOV EAX, 4 [EBP]
@@ -147,7 +147,7 @@ CODE OVER ( x1 x2 -- x1 x2 x1 ) \ 94
 END-CODE
 
 CODE 2OVER ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 ) \ 94
-\ Копировать пару ячеек x1 x2 на вершину стека.
+\ Copy cell pair x1 x2 to the top of stack.
      MOV EDX, 8 [EBP]
      MOV -4 [EBP], EAX
      MOV -8 [EBP], EDX
@@ -157,13 +157,13 @@ CODE 2OVER ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 ) \ 94
 END-CODE
 
 CODE NIP ( x1 x2 -- x2 ) \ 94 CORE EXT
-\ Убрать первый элемент под вершиной стека.
+\ Drop the first item below the top of stack.
      LEA EBP, 4 [EBP]
      RET
 END-CODE
 
 CODE ROT ( x1 x2 x3 -- x2 x3 x1 ) \ 94
-\ Прокрутить три верхних элемента стека.
+\ Rotate the top three stack entries.
      MOV  EDX, [EBP]
      MOV  [EBP], EAX
      MOV  EAX, 4 [EBP]
@@ -172,7 +172,7 @@ CODE ROT ( x1 x2 x3 -- x2 x3 x1 ) \ 94
 END-CODE
 
 CODE -ROT ( x1 x2 x3 -- x3 x1 x2 ) \ 94
-\ Прокрутить три верхних элемента стека.
+\ Rotate the top three stack entries in reverse.
      MOV  EDX, 4 [EBP]
      MOV  4 [EBP], EAX
      MOV  EAX, [EBP]
@@ -181,17 +181,17 @@ CODE -ROT ( x1 x2 x3 -- x3 x1 x2 ) \ 94
 END-CODE
 
 CODE PICK ( xu ... x1 x0 u -- xu ... x1 x0 xu ) \ 94 CORE EXT
-\ Убрать u. Копировать xu на вершину стека. Неопределенная ситуация
-\ возникает, если перед выполнением PICK на стеке меньше,
-\ чем u+2 элементов.
+\ Remove u. Copy xu to the top of stack. Ambiguous condition
+\ exists if there are less than u+2 items on the stack
+\ before PICK is executed.
         MOV     EAX, [EBP] [EAX*4]
      RET
 END-CODE
 
 CODE ROLL ( xu xu-1 ... x0 u -- xu-1 ... x0 xu ) \ 94 CORE EXT
-\ Убрать u. Повернуть u+1 элемент на вершине стека.
-\ Неопределенная ситуация возникает, если перед выполнением ROLL
-\ на стеке меньше чем u+2 элементов.
+\ Remove u. Rotate u+1 items on the top of stack.
+\ Ambiguous condition exists if there are less than u+2 items
+\ on the stack before ROLL is executed.
      OR EAX, EAX
      JZ SHORT @@1
      MOV ECX, EAX
@@ -222,14 +222,14 @@ END-CODE
 
 
 \ ================================================================
-\ Стек возвратов
+\ Return stack
 
 
 CODE 2>R   \ 94 CORE EXT
-\ Интерпретация: семантика неопределена.
-\ Выполнение: ( x1 x2 -- ) ( R: -- x1 x2 )
-\ Перенести пару ячеек x1 x2 на стек возвратов. Семантически 
-\ эквивалентно SWAP >R >R.
+\ Interpretation: Semantics undefined.
+\ Execution: ( x1 x2 -- ) ( R: -- x1 x2 )
+\ Transfer cell pair x1 x2 to the return stack. Semantically
+\ equivalent to SWAP >R >R.
      POP  EBX
      PUSH [EBP]
      PUSH EAX
@@ -239,10 +239,10 @@ CODE 2>R   \ 94 CORE EXT
 END-CODE
 
 CODE 2R>  \ 94 CORE EXT
-\ Интерпретация: семантика неопределена.
-\ Выполнение: ( -- x1 x2 ) ( R: x1 x2 -- )
-\ Перенести пару ячеек x1 x2 со стека возвратов. Семантически 
-\ эквивалентно R> R> SWAP.
+\ Interpretation: Semantics undefined.
+\ Execution: ( -- x1 x2 ) ( R: x1 x2 -- )
+\ Transfer cell pair x1 x2 from the return stack. Semantically
+\ equivalent to R> R> SWAP.
      MOV EBX, [ESP]
      MOV  -4 [EBP], EAX
      MOV ECX, 8 [ESP]
@@ -254,8 +254,8 @@ CODE 2R>  \ 94 CORE EXT
 END-CODE
 
 CODE R@ \ 94
-\ Исполнение: ( -- x ) ( R: x -- x )
-\ Интерпретация: семантика в режиме интерпретации неопределена.
+\ Execution: ( -- x ) ( R: x -- x )
+\ Interpretation: Semantics undefined during interpretation.
      LEA EBP, -4 [EBP]
      MOV [EBP], EAX
      MOV EAX, 4 [ESP]
@@ -263,10 +263,10 @@ CODE R@ \ 94
 END-CODE   
 
 CODE 2R@  \ 94 CORE EXT
-\ Интерпретация: семантика неопределена.
-\ Выполнение: ( -- x1 x2 ) ( R: x1 x2 -- x1 x2 )
-\ Копировать пару ячеек x1 x2 со стека возвратов. Семантически 
-\ эквивалентно R> R> 2DUP >R >R SWAP.
+\ Interpretation: Semantics undefined.
+\ Execution: ( -- x1 x2 ) ( R: x1 x2 -- x1 x2 )
+\ Copy cell pair x1 x2 from the return stack. Semantically
+\ equivalent to R> R> 2DUP >R >R SWAP.
      MOV -4 [EBP], EAX
      MOV EAX, 4 [ESP]
      MOV EBX, 8 [ESP]
@@ -276,16 +276,16 @@ CODE 2R@  \ 94 CORE EXT
 END-CODE
 
 \ ================================================================
-\ Операции с памятью
+\ Memory operations
 
 CODE @ ( a-addr -- x ) \ 94
-\ x - значение по адресу a-addr.
+\ x - value stored at a-addr.
      MOV EAX, [EAX]
      RET
 END-CODE
 
 CODE ! ( x a-addr -- ) \ 94
-\ Записать x по адресу a-addr.
+\ Store x at a-addr.
      MOV EDX, [EBP]
      MOV [EAX], EDX
      MOV EAX, 4 [EBP]
@@ -294,13 +294,13 @@ CODE ! ( x a-addr -- ) \ 94
 END-CODE
 
 CODE C@ ( c-addr -- char ) \ 94
-\ Получить символ по адресу c-addr. Незначащие старшие биты ячейки нулевые.
+\ Fetch char from c-addr. Upper bits of cell are zeroed.
      MOVZX EAX, BYTE [EAX]
      RET
 END-CODE
 
 CODE C! ( char c-addr -- ) \ 94
-\ Записать char по адресу a-addr.
+\ Store char at c-addr.
      MOV EDX, [EBP]
      MOV BYTE [EAX], DL
      MOV EAX, 4 [EBP]
@@ -309,13 +309,13 @@ CODE C! ( char c-addr -- ) \ 94
 END-CODE
 
 CODE W@ ( c-addr -- word )
-\ Получить word по адресу c-addr. Незначащие старшие биты ячейки нулевые.
+\ Fetch word from c-addr. Upper bits of cell are zeroed.
      MOVZX EAX, WORD [EAX]
      RET
 END-CODE
 
 CODE W! ( word c-addr -- )
-\ Записать word по адресу a-addr.
+\ Store word at c-addr.
      MOV EDX, [EBP]
      MOV WORD [EAX], DX
      MOV EAX, 4 [EBP]
@@ -324,9 +324,9 @@ CODE W! ( word c-addr -- )
 END-CODE
 
 CODE 2@ ( a-addr -- x1 x2 ) \ 94
-\ Получить пару ячеек x1 x2, записанную по адресу a-addr.
-\ x2 по адресу a-addr, x1 в следующей ячейке.
-\ Равносильно DUP CELL+ @ SWAP @
+\ Fetch cell pair x1 x2 stored at a-addr.
+\ x2 is at a-addr, x1 is at the next cell.
+\ Equivalent to DUP CELL+ @ SWAP @
      MOV EDX, 4 [EAX]
      LEA EBP, -4 [EBP]
      MOV [EBP], EDX
@@ -335,9 +335,9 @@ CODE 2@ ( a-addr -- x1 x2 ) \ 94
 END-CODE
 
 CODE 2! ( x1 x2 a-addr -- ) \ 94
-\ Записать пару ячеек x1 x2 по адресу a-addr,
-\ x2 по адресу a-addr, x1 в следующую ячейку.
-\ Равносильно SWAP OVER ! CELL+ !
+\ Store cell pair x1 x2 at a-addr,
+\ x2 at a-addr, x1 at the next cell.
+\ Equivalent to SWAP OVER ! CELL+ !
      MOV EDX, [EBP]
      MOV [EAX], EDX
      MOV EDX, 4 [EBP]
@@ -348,16 +348,16 @@ CODE 2! ( x1 x2 a-addr -- ) \ 94
 END-CODE
 
 \ ================================================================
-\ Вычисления
+\ Arithmetic
 
 CODE 1+ ( n1|u1 -- n2|u2 ) \ 94
-\ Прибавить 1 к n1|u1 и получить сумму u2|n2.
+\ Add one to n1|u1 giving the sum n2|u2.
      LEA EAX, 1 [EAX]
      RET
 END-CODE
 
 CODE 1- ( n1|u1 -- n2|u2 ) \ 94
-\ Вычесть 1 из n1|u1 и получить разность n2|u2.
+\ Subtract one from n1|u1 giving the difference n2|u2.
      LEA EAX, -1 [EAX]
      RET
 END-CODE
@@ -378,7 +378,7 @@ CODE 2*
 END-CODE
 
 CODE + ( n1|u1 n2|u2 -- n3|u3 ) \ 94
-\ Сложить n1|u1 и n2|u2 и получить сумму n3|u3.
+\ Add n1|u1 and n2|u2 giving the sum n3|u3.
      ADD EAX, [EBP]
      LEA EBP, 4 [EBP]
      RET
@@ -400,7 +400,7 @@ CODE CELLS
 END-CODE
                
 CODE D+ ( d1|ud1 d2|ud2 -- d3|ud3 ) \ 94 DOUBLE
-\ Сложить d1|ud1 и d2|ud2 и дать сумму d3|ud3.
+\ Add d1|ud1 and d2|ud2 giving double number d3|ud3.
      MOV EDX, [EBP]
      ADD 8 [EBP], EDX
      ADC EAX, 4 [EBP]
@@ -418,7 +418,7 @@ CODE D- ( d1|ud1 d2|ud2 -- d3|ud3 ) \ 94 DOUBLE
 END-CODE
 
 CODE - ( n1|u1 n2|u2 -- n3|u3 ) \ 94
-\ Вычесть n2|u2 из n1|u1 и получить разность n3|u3.
+\ Subtract n2|u2 from n1|u1 giving the difference n3|u3.
      NEG EAX
      ADD EAX, [EBP]
      LEA EBP, 4 [EBP]
@@ -440,10 +440,10 @@ CODE 0! ( A -> )
 END-CODE
 
 CODE COUNT ( c-addr1 -- c-addr2 u ) \ 94
-\ Получить строку символов из строки со счетчиком c-addr1.
-\ c-addr2 - адрес первого символа за c-addr1.
-\ u - содержимое байта c-addr1, являющееся длиной строки символов,
-\ начинающейся с адреса c-addr2.
+\ Return character count and string address for counted string at c-addr1.
+\ c-addr2 - address of first character after c-addr1.
+\ u - contents of c-addr1, which is the count of characters
+\ starting at c-addr2.
      LEA EBP, -4 [EBP]
      LEA EDX, 1 [EAX]
      MOVZX EAX, BYTE [EAX]
@@ -452,47 +452,47 @@ CODE COUNT ( c-addr1 -- c-addr2 u ) \ 94
 END-CODE
 
 CODE * ( n1|u1 n2|u2 -- n3|u3 ) \ 94
-\ Перемножить n1|u1 и n2|u2 и получить произведение n3|u3.
+\ Multiply n1|u1 by n2|u2 giving the product n3|u3.
      IMUL DWORD [EBP]
      LEA EBP, 4 [EBP]
      RET
 END-CODE
 
 CODE AND ( x1 x2 -- x3 ) \ 94
-\ x3 - побитовое "И" x1 и x2.
+\ x3 - bit-by-bit logical "and" of x1 and x2.
      AND EAX, [EBP]
      LEA EBP, 4 [EBP]
      RET
 END-CODE
 
 CODE OR ( x1 x2 -- x3 ) \ 94
-\ x3 - побитовое "ИЛИ" x1 и x2.
+\ x3 - bit-by-bit logical "or" of x1 and x2.
      OR EAX, [EBP]
      LEA EBP, 4 [EBP]
      RET
 END-CODE
 
 CODE XOR ( x1 x2 -- x3 ) \ 94
-\ x3 - побитовое "исключающее ИЛИ" x1 и x2.
+\ x3 - bit-by-bit logical "exclusive or" of x1 and x2.
      XOR EAX, [EBP]
      LEA EBP, 4 [EBP]
      RET
 END-CODE
 
 CODE INVERT ( x1 -- x2 ) \ 94
-\ Инвертировать все биты x1 и получить логическую инверсию x2.
+\ Invert all bits of x1 giving the logical inverse x2.
      NOT EAX
      RET
 END-CODE
 
 CODE NEGATE ( n1 -- n2 ) \ 94
-\ n2 - арифметическая инверсия n1.
+\ n2 - the arithmetic negation of n1.
        NEG EAX
        RET
 END-CODE
 
 CODE ABS ( n -- u ) \ 94
-\ u - абсолютная величина n.
+\ u - the absolute value of n.
     MOV     ECX, EAX
     SAR     ECX, 1F
     XOR     EAX, ECX
@@ -501,7 +501,7 @@ CODE ABS ( n -- u ) \ 94
 END-CODE
 
 CODE DNEGATE ( d1 -- d2 ) \ 94 DOUBLE
-\ d2 результат вычитания d1 из нуля.
+\ d2 is the result of negating d1.
        NEG     EAX
        NEG     DWORD [EBP]
        SBB     EAX, # 0
@@ -513,7 +513,7 @@ CODE NOOP ( -> )
 END-CODE
 
 CODE S>D ( n -- d ) \ 94
-\ Преобразовать число n в двойное число d с тем же числовым значением.
+\ Convert single number n to double number d with the same numeric value.
      CDQ
      LEA EBP, -4 [EBP]
      MOV [EBP], EAX
@@ -522,28 +522,28 @@ CODE S>D ( n -- d ) \ 94
 END-CODE
 
 CODE D>S ( d -- n ) \ 94 DOUBLE
-\ n - эквивалент d.
-\ Исключительная ситуация возникает, если d находится вне диапазона
-\ знаковых одинарных чисел.
+\ n - equivalent of d.
+\ Ambiguous condition exists if d is outside the range of
+\ signed single-cell numbers.
      MOV EAX, [EBP]
      LEA EBP, 4 [EBP]
      RET
 END-CODE
 
-CODE U>D ( U -> D ) \ расширить число до двойной точности нулем
+CODE U>D ( U -> D ) \ Zero-extend unsigned number to double
      LEA EBP, -4 [EBP]
      MOV [EBP], EAX
      XOR EAX, EAX
      RET
 END-CODE
 
-CODE C>S ( c -- n )  \ расширить CHAR
+CODE C>S ( c -- n )  \ Sign-extend CHAR
      MOVSX  EAX, AL
      RET
 END-CODE
 
 CODE UM* ( u1 u2 -- ud ) \ 94
-\ ud - произведение u1 и u2. Все значения и арифметика беззнаковые.
+\ ud - product of u1 and u2. All values and arithmetic are unsigned.
        MUL DWORD [EBP]
        MOV [EBP], EAX
        MOV EAX, EDX
@@ -551,10 +551,10 @@ CODE UM* ( u1 u2 -- ud ) \ 94
 END-CODE
 
 CODE / ( n1 n2 -- n3 ) \ 94
-\ Делить n1 на n2, получить частное n3.
-\ Исключительная ситуация возникает, если n2 равен нулю.
-\ Если n1 и n2 различаются по знаку - возвращаемый результат зависит от
-\ реализации.
+\ Divide n1 by n2, giving quotient n3.
+\ Ambiguous condition exists if n2 equals zero.
+\ If n1 and n2 differ in sign - result is implementation
+\ dependent.
        MOV ECX, EAX
        MOV EAX, [EBP]
        CDQ
@@ -563,7 +563,7 @@ CODE / ( n1 n2 -- n3 ) \ 94
        RET
 END-CODE
 
-CODE U/ ( W1, W2 -> W3 ) \ беззнаковое деление W1 на W2
+CODE U/ ( W1, W2 -> W3 ) \ Unsigned divide W1 by W2
        MOV ECX, EAX
        MOV EAX, [EBP]
        XOR EDX, EDX
@@ -573,7 +573,7 @@ CODE U/ ( W1, W2 -> W3 ) \ беззнаковое деление W1 на W2
 END-CODE
 
 CODE +! ( n|u a-addr -- ) \ 94
-\ Прибавить n|u к одинарному числу по адресу a-addr.
+\ Add n|u to the single-cell number at a-addr.
      MOV EDX, [EBP]
      ADD [EAX], EDX
      MOV EAX, 4 [EBP]
@@ -582,10 +582,10 @@ CODE +! ( n|u a-addr -- ) \ 94
 END-CODE
 
 CODE MOD ( n1 n2 -- n3 ) \ 94
-\ Делить n1 на n2, получить остаток n3.
-\ Исключительная ситуация возникает, если n2 равен нулю.
-\ Если n1 и n2 различаются по знаку - возвращаемый результат зависит от
-\ реализации.
+\ Divide n1 by n2, giving remainder n3.
+\ Ambiguous condition exists if n2 equals zero.
+\ If n1 and n2 differ in sign - result is implementation
+\ dependent.
        MOV ECX, EAX
        MOV EAX, [EBP]
        CDQ
@@ -596,8 +596,8 @@ CODE MOD ( n1 n2 -- n3 ) \ 94
 END-CODE
 
 CODE /MOD ( n1 n2 -- n3 n4 ) \ 94
-\ Делить n1 на n2, дать остаток n3 и частное n4.
-\ Неоднозначная ситуация возникает, если n2 нуль.
+\ Divide n1 by n2, giving remainder n3 and quotient n4.
+\ Ambiguous condition exists if n2 is zero.
        MOV ECX, EAX
        MOV EAX, [EBP]
        CDQ
@@ -606,7 +606,7 @@ CODE /MOD ( n1 n2 -- n3 n4 ) \ 94
        RET
 END-CODE
 
-CODE UMOD ( W1, W2 -> W3 ) \ остаток от деления W1 на W2
+CODE UMOD ( W1, W2 -> W3 ) \ Unsigned remainder of W1 divided by W2
        MOV ECX, EAX
        MOV EAX, [EBP]
        XOR EDX, EDX
@@ -617,10 +617,10 @@ CODE UMOD ( W1, W2 -> W3 ) \ остаток от деления W1 на W2
 END-CODE
 
 CODE UM/MOD ( ud u1 -- u2 u3 ) \ 94
-\ Делить ud на u1, получить частное u3 и остаток u2.
-\ Все значения и арифметика беззнаковые.
-\ Исключительная ситуация возникает, если u1 ноль или частное
-\ находится вне диапазона одинарных беззнаковых чисел.
+\ Divide ud by u1, giving quotient u3 and remainder u2.
+\ All values and arithmetic are unsigned.
+\ Ambiguous condition exists if u1 is zero or if quotient
+\ lies outside the range of single-cell unsigned integers.
        MOV ECX, EAX
        MOV EDX, [EBP]
        MOV EAX, 4 [EBP]
@@ -631,7 +631,7 @@ CODE UM/MOD ( ud u1 -- u2 u3 ) \ 94
 END-CODE
 
 CODE 2/ ( x1 -- x2 ) \ 94
-\ x2 - результат сдвига x1 на один бит вправо без изменения старшего бита.
+\ x2 - result of shifting x1 one bit right, leaving the most-significant bit unchanged.
      D1 C, F8 C,  \    SAR EAX, # 1
      RET
 END-CODE
@@ -643,8 +643,8 @@ CODE U2/        ( N1 -- N2 ) \ unsigned divide n1 by two
 END-CODE
 
 CODE */MOD ( n1 n2 n3 -- n4 n5 ) \ 94
-\ Умножить n1 на n2, получить промежуточный двойной результат d.
-\ Разделить d на n3, получить остаток n4 и частное n5.
+\ Multiply n1 by n2, producing intermediate double result d.
+\ Divide d by n3, giving remainder n4 and quotient n5.
        MOV     ECX, EAX
        MOV     EAX, [EBP]      \ n2
        IMUL    DWORD 4 [EBP]   \ n1*n2
@@ -655,7 +655,7 @@ CODE */MOD ( n1 n2 n3 -- n4 n5 ) \ 94
 END-CODE
 
 CODE M* ( n1 n2 -- d ) \ 94
-\ d - знаковый результат умножения n1 на n2.
+\ d - signed double result of multiplying n1 by n2.
      IMUL DWORD [EBP]
      MOV  [EBP], EAX
      MOV  EAX, EDX 
@@ -663,10 +663,10 @@ CODE M* ( n1 n2 -- d ) \ 94
 END-CODE
 
 CODE LSHIFT ( x1 u -- x2 ) \ 94
-\ Сдвинуть x1 на u бит влево. Поместить нули в наименее значимые биты,
-\ освобождаемые при сдвиге.
-\ Неоднозначная ситуация возникает, если u больше или равно
-\ числу бит в ячейке.
+\ Shift x1 u bits left. Put zeros into the least-significant
+\ bit positions vacated.
+\ Ambiguous condition exists if u is greater than or equal to
+\ number of bits in a cell.
      MOV ECX, EAX
      MOV EAX, [EBP]
      SHL EAX, CL
@@ -675,10 +675,10 @@ CODE LSHIFT ( x1 u -- x2 ) \ 94
 END-CODE
 
 CODE RSHIFT ( x1 u -- x2 ) \ 94
-\ Сдвинуть x1 на u бит вправо. Поместить нули в наиболее значимые биты,
-\ освобождаемые при сдвиге.
-\ Неоднозначная ситуация возникает, если u больше или равно
-\ числу бит в ячейке.
+\ Shift x1 u bits right. Put zeros into the most-significant
+\ bit positions vacated.
+\ Ambiguous condition exists if u is greater than or equal to
+\ number of bits in a cell.
      MOV ECX, EAX
      MOV EAX, [EBP]
      SHR EAX, CL
@@ -696,10 +696,10 @@ END-CODE
 
 
 CODE SM/REM ( d1 n1 -- n2 n3 ) \ 94
-\ Разделить d1 на n1, получить симметричное частное n3 и остаток n2.
-\ Входные и выходные аргументы знаковые.
-\ Неоднозначная ситуация возникает, если n1 ноль, или частное вне
-\ диапазона одинарных знаковых чисел.
+\ Divide d1 by n1, giving symmetric quotient n3 and remainder n2.
+\ Remainder and dividend have the same sign.
+\ Ambiguous condition exists if n1 is zero, or if quotient
+\ lies outside the range of single-cell signed integers.
      MOV ECX, EAX
      MOV EDX, [EBP]
      MOV EAX, 4 [EBP]
@@ -712,18 +712,18 @@ END-CODE
 \ From: Serguei V. Jidkov [mailto:jsv@gorod.bryansk.ru]
 
 CODE FM/MOD ( d1 n1 -- n2 n3 ) \ 94
-\ Разделить d1 на n1, получить частное n3 и остаток n2.
-\ Входные и выходные аргументы знаковые.
-\ Неоднозначная ситуация возникает, если n1 ноль, или частное вне
-\ диапазона одинарных знаковых чисел.
+\ Divide d1 by n1, giving floored quotient n3 and remainder n2.
+\ Remainder and divisor have the same sign.
+\ Ambiguous condition exists if n1 is zero, or if quotient
+\ lies outside the range of single-cell signed integers.
         MOV ECX, EAX
         MOV EDX, 0 [EBP]
         MOV EBX, EDX
         MOV EAX, 4 [EBP]
         IDIV ECX
-        TEST EDX, EDX            \ Остаток-то есть?
+        TEST EDX, EDX            \ is remainder non-zero?
         JZ  SHORT @@1
-        XOR EBX, ECX             \ А аргументы разного знака?
+        XOR EBX, ECX             \ do dividend and divisor have different signs?
         JNS SHORT @@1
         DEC EAX
         ADD EDX, ECX
@@ -734,11 +734,11 @@ END-CODE
 
 
 CODE DIGIT ( char n1 -- n2 true | false )
-\ n2 - значение литеры char как
-\ цифры в системе счисления по основанию n1
-\ Особенность реализации:
-\ если n1 или n2 больше 255 (т.е., превышает размер байта),
-\ то результат будет заведомо некорректен.
+\ n2 - numeric value of character char when treated as
+\ a digit in base n1
+\ Implementation note:
+\ If n1 or n2 is greater than 255 (i.e., exceeds one byte),
+\ behavior may be undefined.
        MOV ECX, EAX
        MOV EAX, [EBP]
        A;  2C C, 30 C,  \  SUB AL, # 30
@@ -762,10 +762,10 @@ CODE DIGIT ( char n1 -- n2 true | false )
 END-CODE
 
 \ ================================================================
-\ Сравнения
+\ Comparisons
 
 CODE = ( x1 x2 -- flag ) \ 94
-\ flag "истина" тогда и только тогда, когда x1 побитно равен x2.
+\ flag is "true" if and only if x1 is bit-for-bit the same as x2.
      XOR  EAX, [EBP]
      SUB  EAX, # 1
      SBB  EAX, EAX 
@@ -774,7 +774,7 @@ CODE = ( x1 x2 -- flag ) \ 94
 END-CODE
 
 CODE <> ( x1 x2 -- flag ) \ 94 CORE EXT
-\ flag "истина" тогда и только тогда, когда x1 не равен x2.
+\ flag is "true" if and only if x1 is not equal to x2.
      XOR  EAX, [EBP]
      NEG  EAX
      SBB  EAX, EAX
@@ -783,7 +783,7 @@ CODE <> ( x1 x2 -- flag ) \ 94 CORE EXT
 END-CODE
 
 CODE < ( n1 n2 -- flag ) \ 94
-\ flag "истина" тогда и только тогда, когда n1 меньше n2.
+\ flag is "true" if and only if n1 is less than n2.
        CMP  EAX, [EBP]
        SETLE AL
        AND  EAX, # 1
@@ -793,7 +793,7 @@ CODE < ( n1 n2 -- flag ) \ 94
 END-CODE
 
 CODE > ( n1 n2 -- flag ) \ 94
-\ flag "истина" тогда и только тогда, когда n1 больше n2.
+\ flag is "true" if and only if n1 is greater than n2.
        CMP  EAX, [EBP]
        SETGE AL
        AND  EAX,  # 1
@@ -813,7 +813,7 @@ CODE WITHIN     ( n1 low high -- f1 ) \ f1=true if ((n1 >= low) & (n1 < high))
 END-CODE
 
 CODE D< ( d1 d2 -- flag ) \ DOUBLE
-\ flag "истина" тогда и только тогда, когда d1 меньше d2.
+\ flag is "true" if and only if d1 is less than d2.
      MOV EDX, [EBP]
      CMP 8 [EBP], EDX
      SBB 4 [EBP], EAX
@@ -825,7 +825,7 @@ CODE D< ( d1 d2 -- flag ) \ DOUBLE
 END-CODE
 
 CODE D> ( d1 d2 -- flag ) \ DOUBLE
-\ flag "истина" тогда и только тогда, когда d1 больше d2.
+\ flag is "true" if and only if d1 is greater than d2.
      MOV EDX, 8 [EBP]
      CMP [EBP], EDX
      SBB EAX, 4 [EBP]
@@ -837,7 +837,7 @@ CODE D> ( d1 d2 -- flag ) \ DOUBLE
 END-CODE
 
 CODE U< ( u1 u2 -- flag ) \ 94
-\ flag "истина" тогда и только тогда, когда u1 меньше u2.
+\ flag is "true" if and only if u1 is less than u2 (unsigned compare).
      CMP  [EBP], EAX
      SBB  EAX, EAX
      LEA  EBP, 4 [EBP]
@@ -845,7 +845,7 @@ CODE U< ( u1 u2 -- flag ) \ 94
 END-CODE
 
 CODE U> ( u1 u2 -- flag ) \ 94
-\ flag "истина" тогда и только тогда, когда u1 больше u2.
+\ flag is "true" if and only if u1 is greater than u2 (unsigned compare).
      CMP  EAX, [EBP]
      SBB  EAX, EAX
      LEA  EBP, 4 [EBP]
@@ -853,27 +853,27 @@ CODE U> ( u1 u2 -- flag ) \ 94
 END-CODE
 
 CODE 0< ( n -- flag ) \ 94
-\ flag "истина" тогда и только тогда, когда n меньше нуля.
+\ flag is "true" if and only if n is less than zero.
     SAR EAX, # 1F
     RET
 END-CODE
 
 CODE 0= ( x -- flag ) \ 94
-\ flag "истина" тогда и только тогда, когда x равно нулю.
+\ flag is "true" if and only if x equals zero.
      SUB   EAX, # 1
      SBB   EAX, EAX
      RET
 END-CODE
 
 CODE 0<> ( x -- flag ) \ 94 CORE EXT
-\ flag "истина" тогда и только тогда, когда x не равно нулю.
+\ flag is "true" if and only if x is not equal to zero.
      NEG   EAX
      SBB   EAX, EAX
      RET
 END-CODE
 
 CODE D0= ( xd -- flag ) \ 94 DOUBLE
-\ flag "истина" тогда и только тогда, когда xd равен нулю.
+\ flag is "true" if and only if xd equals zero.
      OR   EAX, [EBP]
      SUB  EAX, # 1
      SBB  EAX, EAX
@@ -910,12 +910,12 @@ CODE D2/ ( xd1 -- xd2 ) \ 94 DOUBLE
 END-CODE
 
 \ ================================================================
-\ Строки
+\ Strings
 
 CODE -TRAILING ( c-addr u1 -- c-addr u2 ) \ 94 STRING
-\ Если u1 больше нуля, u2 равно u1, уменьшенному на количество пробелов в конце 
-\ символьной строки, заданной c-addr и u1. Если u1 ноль или вся строка состоит 
-\ из пробелов, u2 ноль.
+\ If u1 is greater than zero, u2 equals u1 less the number of trailing spaces
+\ in the character string specified by c-addr and u1. If u1 is zero or the
+\ entire string consists of spaces, u2 is zero.
       OR EAX, EAX
       JZ SHORT @@1
       MOV EDX, EDI
@@ -935,15 +935,15 @@ CODE -TRAILING ( c-addr u1 -- c-addr u2 ) \ 94 STRING
 END-CODE
 
 CODE COMPARE ( c-addr1 u1 c-addr2 u2 -- n ) \ 94 STRING
-\ Сравнить строку, заданную c-addr1 u1, со строкой, заданной c-addr2 u2.
-\ Строки сравниваются, начиная с заданных адресов, символ за символом, до длины 
-\ наиболее короткой из строк или до нахождения различий. Если две строки 
-\ идентичны, n ноль. Если две строки идентичны до длины наиболее короткой из 
-\ строк, то n минус единица (-1), если u1 меньше u2, иначе единица (1).
-\ Если две строки не идентичны до длины наиболее короткой из строк, то n минус 
-\ единица (-1), если первый несовпадающий символ строки, заданной c-addr1 u1
-\ имеет меньшее числовое значение, чем соответствующий символ в строке, 
-\ заданной c-addr2 u2, и единица в противном случае.
+\ Compare the string specified by c-addr1 u1 to the string specified by c-addr2 u2.
+\ Strings are compared, starting at given addresses, character by character, up to
+\ the length of the shorter string or until a difference is found. If the two strings
+\ are identical, n is zero. If the two strings are identical up to the length of
+\ the shorter string, n is minus-one (-1) if u1 is less than u2, otherwise one (1).
+\ If the two strings are not identical up to the length of the shorter string, n is
+\ minus-one (-1) if the first mismatched character in the string specified by c-addr1 u1
+\ has a lesser numeric value than the corresponding character in the string
+\ specified by c-addr2 u2, and one (1) otherwise.
       MOV EDX, EDI
       MOV EDI,   [EBP]
       MOV ECX, 4 [EBP]
@@ -973,10 +973,10 @@ CODE COMPARE ( c-addr1 u1 c-addr2 u2 -- n ) \ 94 STRING
 END-CODE
 
 CODE SEARCH ( c-addr1 u1 c-addr2 u2 -- c-addr3 u3 flag ) \ 94 STRING
-\ Произвести поиск в строке, заданной c-addr1 u1, строки, заданной c-addr2 u2.
-\ Если флаг "истина", совпадение найдено по адресу c-addr3 с оставшимися u3
-\ символами. Если флаг "ложь", совпадения не найдено, и c-addr3 есть c-addr1,
-\ и u3 есть u1.
+\ Search for string c-addr2 u2 within string c-addr1 u1.
+\ If flag is "true", match was found at c-addr3 with u3 characters
+\ remaining. If flag is "false", no match was found, c-addr3 equals c-addr1,
+\ and u3 equals u1.
       PUSH EDI
       CLD
       MOV EBX,   EAX
@@ -991,20 +991,20 @@ CODE SEARCH ( c-addr1 u1 c-addr2 u2 -- c-addr3 u3 flag ) \ 94 STRING
       SUB ECX, EDI
       JECXZ @@1
       REPNZ SCAS BYTE
-      JNZ SHORT @@1   \ во всей строке нет первого символа искомой строки
+      JNZ SHORT @@1   \ first char of search string not found
       CMP EBX, # 1
-      JZ SHORT @@2   \ искомая строка имела длину 1 и найдена
+      JZ SHORT @@2   \ search string length is 1, found
       MOV ECX, EBX
       LEA ECX, -1 [ECX]
       MOV EAX, EDX
       SUB EAX, EDI
       CMP EAX, ECX
-      JC SHORT @@1  \ остаток строки короче искомой строки
+      JC SHORT @@1  \ remaining string shorter than search string
       PUSH EDI
       REPZ CMPS BYTE
       POP EDI
       JNZ SHORT @@4
-@@2:  DEC EDI           \ нашли полное совпадение
+@@2:  DEC EDI           \ match found
       SUB EDX, EDI
       MOV 8 [EBP], EDI
       MOV 4 [EBP], EDX
@@ -1017,16 +1017,16 @@ CODE SEARCH ( c-addr1 u1 c-addr2 u2 -- c-addr3 u3 flag ) \ 94 STRING
 END-CODE
 
 CODE CMOVE ( c-addr1 c-addr2 u -- ) \ 94 STRING
-\ Если u больше нуля, копировать u последовательных символов из пространства 
-\ данных начиная с адреса c-addr1 в c-addr2, символ за символом, начиная с 
-\ младших адресов к старшим.
+\ If u is greater than zero, copy u consecutive characters from the
+\ data space starting at c-addr1 to c-addr2, proceeding character by
+\ character from lower to higher addresses.
        MOV EDX, EDI
        MOV ECX, EAX
        MOV EDI, [EBP]
        MOV ESI, 4 [EBP]
        CLD
-       \ перекрываются ли области данных?
-        \ если нет, то можно копировать DWORD
+       \ Do regions overlap?
+        \ If not, we can copy DWORDs
        MOV EBX, EDI
        SUB EBX, ESI
        JG  SHORT @@2
@@ -1034,24 +1034,24 @@ CODE CMOVE ( c-addr1 c-addr2 u -- ) \ 94 STRING
 @@2:   CMP EBX, EAX
        JL  SHORT @@1
        
-       \ если выровняем на 4, то копируется в 3 раза быстрее
+       \ If not aligned to 4, copy up to 3 bytes first
        MOV  EBX, EDI
        AND  EBX, # 3
        JZ   SHORT @@3
        MOV  ECX, # 4
        SUB  ECX, EBX
-       
+
        CMP  ECX, EAX
        JL   SHORT @@4
        MOV  ECX, EAX
-       JMP  @@1 \ нечего выравнивать
+       JMP  @@1 \ short copy
 @@4:
        SUB  EAX, ECX                    
        REP  MOVS BYTE
        MOV  ECX, EAX
-@@3:       
+@@3:
        SAR ECX, # 2
-       \ вот здесь хорошо бы в MMX копировать
+       \ Could be done faster with MMX instructions
        REP MOVS DWORD
        MOV ECX, EAX
        AND ECX, # 3
@@ -1064,9 +1064,9 @@ CODE CMOVE ( c-addr1 c-addr2 u -- ) \ 94 STRING
 END-CODE
 
 CODE CMOVE> ( c-addr1 c-addr2 u -- ) \ 94 STRING
-\ Если u больше нуля, копировать u последовательных символов из пространства 
-\ данных начиная с адреса c-addr1 в c-addr2, символ за символом, начиная со
-\ старших адресов к младшим.
+\ If u is greater than zero, copy u consecutive characters from the
+\ data space starting at c-addr1 to c-addr2, proceeding character by
+\ character from higher to lower addresses.
        MOV EDX, EDI
        MOV ECX, EAX
        MOV EDI, [EBP]
@@ -1085,16 +1085,16 @@ CODE CMOVE> ( c-addr1 c-addr2 u -- ) \ 94 STRING
 END-CODE
 
 CODE FILL ( c-addr u char -- ) \ 94
-\ Если u больше нуля, заслать char в u байтов по адресу c-addr.
+\ If u is greater than zero, store char in u bytes at c-addr.
        MOV EDX, EDI
        MOV ECX, [EBP]
        MOV EDI, 4 [EBP]
        CLD
-       \ можем ли заполнять DWORD?
+       \ Can we optimize with DWORD?
        MOV EBX, ECX
        AND EBX, # 3
-       JNZ @@1 \ низя
-       \ сформируем DWORD
+       JNZ @@1 \ no
+       \ Fill with DWORD
        MOV EBX, EAX
        SHL EAX, # 8
        OR  EAX, EBX
@@ -1130,7 +1130,7 @@ CODE ASCIIZ> ( c-addr -- c-addr u )
 END-CODE
 
 \ ================================================================
-\ Указатели стеков
+\ Stack pointers
 
 CODE SP! ( A -> )
      LEA EBP,  4 [EAX]
@@ -1161,9 +1161,9 @@ CODE RP@ ( -- RP )
 END-CODE
 
 \ ================================================================
-\ Регистр потока (задачи внутри форта)
+\ Thread data (thread local storage)
 
-CODE TlsIndex! ( x -- ) \ указатель локального пула потока
+CODE TlsIndex! ( x -- ) \ Set thread local storage index
      MOV EDI, EAX
      MOV EAX, [EBP]
      LEA EBP, 4 [EBP]
@@ -1191,20 +1191,20 @@ CODE FS! ( x addr -- )
 END-CODE
 
 \ ================================================================
-\ Циклы
+\ Loops
 
 CODE J   \ 94
-\ Интерпретация: семантика неопределена.
-\ Выполнение: ( -- n|u ) ( R: loop-sys -- loop-sys )
-\ n|u - копия параметра следующего объемлющего цикла.
-\ Неоднозначная ситуация возникает, если параметр недоступен.
+\ Interpretation: Semantics undefined.
+\ Execution: ( -- n|u ) ( R: loop-sys -- loop-sys )
+\ n|u - copy of next-outer loop index.
+\ Ambiguous condition exists if called outside of loop.
       LEA EBP, -4 [EBP]
       MOV [EBP], EAX
       MOV EAX, 10 [ESP]
       RET
 END-CODE
 
-( inline'ы для компиляции циклов )
+( inline code for loop control )
 
 CODE C-DO
    LEA EBP, 8 [EBP]
@@ -1280,8 +1280,8 @@ CODE C-?DUP
 END-CODE 
 
 CODE C-EXECUTE ( i*x xt -- j*x ) \ 94
-\ Убрать xt со стека и выполнить заданную им семантику.
-\ Другие изменения на стеке определяются словом, которое выполняется.
+\ Remove xt from the stack and perform the semantics identified by it.
+\ Other stack effects are due to the word executed.
      MOV  EDX, EAX
      MOV  EAX, [EBP]
      LEA  EBP, 4 [EBP]
@@ -1290,11 +1290,11 @@ CODE C-EXECUTE ( i*x xt -- j*x ) \ 94
 END-CODE
 
 CODE C-EXECUTE2 ( i*x xt -- j*x edx )
-\ Убрать xt со стека и выполнить заданную им семантику.
-\ Другие изменения на стеке определяются словом, которое выполняется.
-\ Кроме результата выполнения xt возвращается значение регистра EDX,
-\ которое является старшим словом int64-результата, если вызывалась
-\ функция C.
+\ Remove xt from the stack and perform the semantics identified by it.
+\ Other stack effects are due to the word executed.
+\ After executing xt, the value of EDX register is also returned,
+\ which contains the high part of int64 result when calling
+\ C functions.
      MOV  EDX, EAX
      MOV  EAX, [EBP]
      LEA  EBP, 4 [EBP]
@@ -1306,11 +1306,11 @@ CODE C-EXECUTE2 ( i*x xt -- j*x edx )
 END-CODE
 
 \ ================================================================
-\ Поддержка LOCALS
+\ LOCALS support
 
 CODE DRMOVE ( x1 ... xn n*4 -- )
-\ перенести n чисел со стека данных на стек возвратов
-     POP  EDX \ адрес возврата
+\ Transfer n cells from data stack to return stack
+     POP  EDX \ return address
      MOV  ESI, EAX
 @@1: 
      PUSH -4 [EBP] [ESI] 
@@ -1323,9 +1323,9 @@ CODE DRMOVE ( x1 ... xn n*4 -- )
 END-CODE
 
 CODE NR> ( R: x1 ... xn n -- D: x1 ... xn n )
-\ Перенести n чисел со стека возвратов на стек данных
-\ Если n=0 возвратить 0
-     POP  EDX \ адрес возврата
+\ Transfer n cells from return stack to data stack
+\ If n=0 returns 0
+     POP  EDX \ return address
      LEA  EBP, -4 [EBP]     
      MOV  [EBP], EAX
      POP  EAX
@@ -1347,12 +1347,12 @@ CODE NR> ( R: x1 ... xn n -- D: x1 ... xn n )
 END-CODE
 
 CODE N>R ( D: x1 ... xn n -- R: x1 ... xn n )
-\ перенести n чисел со стека данных на стек возвратов
+\ Transfer n cells from data stack to return stack
      LEA  EBP, -4 [EBP]
      MOV  [EBP], EAX
      LEA EAX, 4 [EAX*4]
 
-     POP  EDX \ адрес возврата
+     POP  EDX \ return address
      MOV  ESI, EAX
 @@1: 
      PUSH -4 [EBP] [ESI] 
@@ -1365,11 +1365,11 @@ CODE N>R ( D: x1 ... xn n -- R: x1 ... xn n )
 END-CODE
 
 CODE NRCOPY ( D: i*x i -- D: i*x i R: i*x i )
-\ скопировать n чисел со стека данных на стек возвратов
+\ Copy n cells from data stack to return stack
      MOV  ECX, EAX
      LEA  ECX, [ECX*4]
 
-     POP  EDX \ адрес возврата
+     POP  EDX \ return address
      JECXZ @@2
      MOV  ESI, ECX
 @@1: 
@@ -1382,19 +1382,19 @@ CODE NRCOPY ( D: i*x i -- D: i*x i R: i*x i )
 END-CODE
 
 CODE RP+@ ( offs -- x )
-\ взять число со смещением offs байт от вершины стека возвратов (0 RP+@ == RP@ @)
+\ Fetch cell at offset offs bytes below return stack top (0 RP+@ == RP@ @)
      8B C, 44 C, 04 C, 04 C, \ MOV EAX, 4 [ESP] [EAX]
      RET
 END-CODE
      
 CODE RP+ ( offs -- addr )
-\ взять адрес со смещением offs байт от вершины стека возвратов
+\ Address at offset offs bytes below return stack top
      8D C, 44 C, 04 C, 04 C, \  LEA EAX, 4 [ESP] [EAX]
      RET
 END-CODE
 
 CODE RP+! ( x offs -- )
-\ записать число x по смещению offs байт от вершины стека возвратов
+\ Store cell x at offset offs bytes below return stack top
      MOV  EBX, [EBP] A;
      89 C, 5C C, 04 C, 04 C, \   MOV  4 [ESP] [EAX], EBX
      LEA  EBP, 8 [EBP]
@@ -1403,8 +1403,8 @@ CODE RP+! ( x offs -- )
 END-CODE
 
 CODE RALLOT ( n -- addr )
-\ зарезервировать n ячеек на стеке возвратов,
-\ сделаем с инициализацией (а то если больше 8К выделим, exception может)
+\ Allocate n cells on return stack,
+\ filling with zeros (prevents 8th page exception)
      POP  EDX
      MOV  ECX, EAX
      XOR  EAX, EAX
@@ -1416,7 +1416,7 @@ CODE RALLOT ( n -- addr )
 END-CODE
 
 CODE (RALLOT) ( n -- )
-\ зарезервировать n ячеек на стеке возвратов
+\ Allocate n cells on return stack
      POP  EDX
      MOV  ECX, EAX
      XOR  EAX, EAX
@@ -1429,7 +1429,7 @@ CODE (RALLOT) ( n -- )
 END-CODE
 
 CODE RFREE ( n -- )
-\ вернуть n ячеек стека возвратов
+\ Free n cells from return stack
      POP  EDX
      LEA  ESP, [ESP] [EAX*4]
      MOV EAX, [EBP]
@@ -1438,14 +1438,14 @@ CODE RFREE ( n -- )
 END-CODE
 
 CODE (LocalsExit) ( -- )
-\ вернуть память в стек вовратов, число байт лежит на стеке
+\ Read size and deallocate that many cells, then return from word
      POP  EBX
      ADD  ESP, EBX
      RET
 END-CODE
 
-CODE TIMER@ ( -- tlo thi ) \ Только для Intel Pentium и выше!!!
-\ Возвратить значение таймера процессора как ud
+CODE TIMER@ ( -- tlo thi ) \ Only for Intel Pentium and higher!!!
+\ Return processor cycle counter as ud
    MOV -4 [EBP], EAX
    RDTSC
    MOV -8 [EBP], EDX
@@ -1454,12 +1454,12 @@ CODE TIMER@ ( -- tlo thi ) \ Только для Intel Pentium и выше!!!
    RET
 END-CODE
 
-\ Для остальных процессоров раскомментируйте:
+\ For systems without RDTSC support:
 \ : TIMER@ 0 GetTickCount ;
 
 CODE TRAP-CODE ( D: j*x u R: i*x i -- i*x u )
-\ Вспомогательное слово для восстановления значений, сохраненных
-\ перед CATCH на стеке возвратов
+\ Helper code for exception handling, restores data
+\ preserved by CATCH from return stack
      POP  EDX
      POP  ESI
      OR   ESI, ESI
@@ -1475,12 +1475,12 @@ CODE TRAP-CODE ( D: j*x u R: i*x i -- i*x u )
 END-CODE
 
 CODE (ENTER) ( {4*params ret_addr} -- 4*params R: ret_addr ebp ) \ 09.09.2002
-\ отодвинуть стек возвратов и сохранить EBP на стеке возвратов.
-\ необходимо при ручном кодировании входа в callback, т.к.
-\ комбинация SP@ >R портит слово по адресу EBP,
-\ а оно может быть нужно вызывающей процедуре :)
-     POP  EBX       \ адрес возврата из ENTER
-     POP  ESI       \ адрес возврата из CALLBACK/WNDPROC
+\ Switch data stack and save EBP to return stack.
+\ Used for creating callbacks and WNDPROC, since
+\ SP@ >R would work only if EBP points to data stack,
+\ and that may not be true inside callback :)
+     POP  EBX       \ return address from ENTER
+     POP  ESI       \ return address from CALLBACK/WNDPROC
      MOV  EAX, EBP
      MOV  EBP, ESP
 

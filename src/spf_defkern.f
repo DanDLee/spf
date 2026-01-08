@@ -1,8 +1,8 @@
-( Процедуры времени выполнения для CONSTANT, VARIABLE, etc.
-  ОС-независимые слова.
+( Code definitions for CONSTANT, VARIABLE, etc.
+  Subroutine-threaded code.
   Copyright [C] 1992-1999 A.Cherezov ac@forth.org
-  Преобразование из 16-разрядного в 32-разрядный код - 1995-96гг
-  Ревизия - сентябрь 1999
+  Conversion from 16-bit to 32-bit code - 1995-96
+  Revision - October 1999
 )
 
 CODE _CREATE-CODE

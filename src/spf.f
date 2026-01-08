@@ -2,7 +2,7 @@
 
 429 CONSTANT SPF-KERNEL-VERSION
 
-WARNING 0! \ чтобы не было сообщений isn't unique
+WARNING 0! \ Suppress "isn't unique" warnings
 
 : _FLIT-CODE10 ;
 : _FLIT-CODE8 ;
@@ -91,13 +91,13 @@ S" src/spf_date.f"                INCLUDED
 S" src/spf_xmlhelp.f"             INCLUDED
 S" src/tc_spf.F"                  INCLUDED
 
-WARNING 0! \ чтобы не было сообщений isn't unique
+WARNING 0! \ Suppress "isn't unique" warnings
 
 \ ==============================================================
-\ Начало двоичного образа Форт-системы
-\ в начале команда CALL подпрограммы инициализации.
-\ Возврата из подпрограммы не будет - адрес на стеке
-\ возвратов может использоваться для fixups.
+\ Start of Forth system binary generation.
+\ Initially CALLs are compiled unconditionally.
+\ Addresses are not calculated yet - they are unknown.
+\ Addresses will be corrected later as fixups.
 
 
 HERE  DUP HEX .( Base address of the image 0x) U.
@@ -108,8 +108,8 @@ HERE TC-CALL,
 [THEN]
 
 \ ==============================================================
-\ Основные низкоуровневые слова Форта,
-\ независимые от операционной системы
+\ Define most frequently used words,
+\ compiled to the most efficient code
 0x20 TO MM_SIZE
 S" src/spf_defkern.f"                INCLUDED
 S" src/spf_forthproc.f"              INCLUDED
@@ -117,16 +117,16 @@ S" src/spf_floatkern.f"              INCLUDED
 S" src/spf_forthproc_hl.f"           INCLUDED
 
 \ ==============================================================
-\ Вектора, значения которых будут определено позже
+\ Words that other words depend on for output
 
 VECT TYPE
 
 \ ==============================================================
-\ Средства вызова функций Win32 и импорт
-\ функций Windows, используемых ядром SP-Forth
+\ Define Win32 API access words and
+\ Windows functions used by SP-Forth
 
-\ Средства вызова внешних динамических библиотек
-\ и константы ОС
+\ Define words for operating system access
+\ and working with it
 
 TARGET-POSIX [IF]
 S" src/posix/api.f"                  INCLUDED
@@ -139,7 +139,7 @@ S" src/win/spf_win_const.f"          INCLUDED
 [THEN]
 
 \ ==============================================================
-\ Управление памятью
+\ Memory management
 
 TARGET-POSIX [IF]
 S" src/posix/memory.f"               INCLUDED
@@ -148,7 +148,7 @@ S" src/win/spf_win_memory.f"         INCLUDED
 [THEN]
 
 \ ==============================================================
-\ Структурированная обработка исключений (см.также init)
+\ Exception handling initialization (see also init)
 
 S" src/spf_except.f"                 INCLUDED
 TARGET-POSIX [IF]
@@ -158,7 +158,7 @@ S" src/win/spf_win_except.f"         INCLUDED
 [THEN]
 
 \ ==============================================================
-\ Файловый и консольный ввод-вывод (OC-зависимые)
+\ File input and output operations (OS-dependent)
 
 TARGET-POSIX [IF]
 S" src/posix/io.f"                   INCLUDED
@@ -170,30 +170,30 @@ S" src\win\spf_win_conv.f"           INCLUDED
 S" src/spf_con_io.f"                 INCLUDED
 
 \ ==============================================================
-\ Печать чисел
-\ Имя модуля.
+\ Print words
+\ For output.
 
 S" src/spf_print.f"                  INCLUDED
 S" src/spf_module.f"                 INCLUDED
 
 \ ==============================================================
-\ Парсер исходного текста форт-программ
+\ Start of Forth compiler generation
 S" src/compiler/spf_parser.f"        INCLUDED
 S" src/compiler/spf_read_source.f"   INCLUDED
 
 \ ==============================================================
-\ Компиляция чисел и строк в словарь.
-\ Создание словарных статей.
-\ Поиск слов в словарях.
-\ Печать словарей.
-\ Слова, к-е нельзя инлайнить.
+\ Compilation of words into code and dictionary.
+\ Basic compilation words.
+\ Word search in dictionary.
+\ Error handling.
+\ Words that define colon definitions.
 
 S" src/compiler/spf_nonopt.f"        INCLUDED
 S" src/compiler/spf_compile0.f"      INCLUDED
 
 : [>T]  ; IMMEDIATE
 :  >T   ; IMMEDIATE
-\  Макроподстановщик-оптимизатор
+\ Macro-optimizer
 BUILD-OPTIMIZER [IF]
 S" src/macroopt.f"                   INCLUDED
 [ELSE]
@@ -207,13 +207,13 @@ S" src/compiler/spf_find.f"          INCLUDED
 S" src/compiler/spf_words.f"         INCLUDED
 
 \ ==============================================================
-\ Трансляция исходных текстов.
-\ Обработка ошибок.
-\ Определяющие слова.
-\ Числовые литералы.
-\ Управление компиляцией.
-\ Компиляция управляющих структур.
-\ Работа с модулями
+\ Compilation of immediate words.
+\ Error handling.
+\ Control flow.
+\ Loop compilation.
+\ Literal compilation.
+\ Compilation of definition words.
+\ Work with modules
 
 S" src/compiler/spf_error.f"         INCLUDED
 S" src/compiler/spf_translate.f"     INCLUDED
@@ -227,9 +227,9 @@ S" src/compiler/spf_modules.f"       INCLUDED
 S" src/compiler/spf_inline.f"        INCLUDED
 
 \ ==============================================================
-\ Окружение (environment).
-\ Определяющие слова для Windows.
-\ Многозадачность.
+\ Environment.
+\ Platform-specific words for Windows.
+\ Multitasking.
 \ CGI
 
 TARGET-POSIX [IF]
@@ -243,7 +243,7 @@ S" src\win\spf_win_defwords.f"       INCLUDED
 S" src\win\spf_win_mtask.f"          INCLUDED
 S" src\win\spf_win_cgi.f"            INCLUDED
 
-\ Сохранение системы в exe-файле.
+\ Saving system to exe file.
 
 S" src\win\spf_pe_save.f"            INCLUDED
 : DONE 
@@ -253,12 +253,12 @@ S" src\win\spf_pe_save.f"            INCLUDED
 [THEN]
 
 \ ==============================================================
-\ Инициализация переменных, startup
+\ Variable initialization, startup
 S" src/spf_init.f"                   INCLUDED
 
 TARGET-POSIX [IF]
 \ ==============================================================
-\ Сохранение системы в exe-файле.
+\ Saving system to exe file.
 S" src/posix/save.f"                 INCLUDED
 [THEN]
 
@@ -272,26 +272,26 @@ CR .( Done. Saving the system.)
 CR .( =============================================================)
 CR
 
-TC-LATEST-> FORTH-WORDLIST  \ запись созданной цепочки слов в словарь (реальный адрес)
+TC-LATEST-> FORTH-WORDLIST  \ Set last word in dictionary (main wordlist)
 
-HERE          ' (DP)      TC-ADDR! \ запись указателя пространства кода/данных
-_VOC-LIST @   ' _VOC-LIST TC-ADDR! \ запись созданной цепочки словарей
+HERE          ' (DP)      TC-ADDR! \ Set last allocated code/data address
+_VOC-LIST @   ' _VOC-LIST TC-ADDR! \ Set current vocabulary list
 
 
 TARGET-POSIX [IF]
 
 .( VIRT offset is ) 0 >VIRT . CR
 
-\ Перемещаем в виртуальные адреса VALUE NON-OPT-WL
+\ Initialize in target system VALUE NON-OPT-WL
 ' NON-OPT-WL EXECUTE      ' NON-OPT-WL      TC-VECT!
 
-\ Перемещаем в виртуальные адреса VALUE FORTH-WORDLIST
+\ Initialize in target system VALUE FORTH-WORDLIST
 ' FORTH-WORDLIST EXECUTE  ' FORTH-WORDLIST  TC-VECT!
 
-[T] [DEFINED] MACROOPT-WL [I] [IF] \ может отсутствовать в случе noopt.f
-\ Перемещаем в виртуальные адреса VALUE MACROOPT-WL
+[T] [DEFINED] MACROOPT-WL [I] [IF] \ May be undefined in noopt.f
+\ Initialize in target system VALUE MACROOPT-WL
 ' MACROOPT-WL    EXECUTE  ' MACROOPT-WL     TC-VECT!
-\ Если уж это значение в системе есть, то должно быть корректным ;)
+\ If this is not done in target system, it will be empty ;)
 [THEN]
 
 HERE .forth - TO .forth#
@@ -304,11 +304,11 @@ S" src/xsave.f" 		  INCLUDED
 
 TC-WINAPLINK @ ' WINAPLINK TC-ADDR!
 
-CR  
+CR
 \ HERE U.
 \ DUP  HERE OVER - S" spf.bin" R/W CREATE-FILE THROW WRITE-FILE THROW
 
-\ записываем "DONE" в командную строку
+\ Write "DONE" to command line
 S"  DONE " GetCommandLineA ASCIIZ> S"  " SEARCH 2DROP SWAP 1+ MOVE
 
 [THEN]
@@ -321,9 +321,9 @@ FINISH-XMLHELP
 TARGET-POSIX [IF]
 S" src/spf4.o" XSAVE
 [ELSE]
-\ на стеке - token слова INIT целевой системы, запускаем её для
-\ того чтобы она сама себя сохранила в spf37x.exe выполнением слова DONE,
-\ переданного ей в командной строке
+\ At the end - token after INIT points to EXECUTE, executing it.
+\ This whole file is parsed by spf37x.exe executing word DONE,
+\ writing it to command line.
 EXECUTE
 [THEN]
 

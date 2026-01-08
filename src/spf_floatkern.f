@@ -1,5 +1,5 @@
-\ Ядро float библиотеки ver. 2.33
-\ Слова низкого уровня
+\ Float kernel words ver. 2.33
+\ Dmitry Yakimov's library
 \ [c] Dmitry Yakimov [ftech@tula.net]
 
 \ Constants
@@ -241,11 +241,11 @@ CODE FDEPTH  \ *
 @@1:   RET
 END-CODE
 
-\ Стек завернут в кольцо!!!
-\ Нумерация регистров в сопроцессоре, видимо, следующая (experimental)
-\        0 7 6 5 4 3 2 1 , где 0 - дно стека
-\ FSTSW возвращает номер регистра
-\ Пришлось это обработать...
+\ Stack grows downward!!!
+\ Numbering: top is rightmost, bottom is leftmost (experimental)
+\        0 7 6 5 4 3 2 1 , where 0 - is the top
+\ FSTSW returns top index
+\ Somehow it works...
 
 CODE F1+    \ *
        FLD1
@@ -538,7 +538,7 @@ CODE FLOG2 ( F: r1 -- r2 )
 END-CODE
 
 
-CODE F[LOG] \ *        \ исп 2 регистра
+CODE F[LOG] \ *        \ for 2 operations
        FLDLG2
        FXCH
        FYL2X
@@ -604,7 +604,7 @@ CODE F10/   \ *
        RET
 END-CODE
 
-\ 28 байт по addr
+\ 28 bytes at addr
 CODE F>ENV ( addr -- )
        FSTENV [EAX]
        MOV EAX, [EBP]

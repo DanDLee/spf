@@ -1,8 +1,8 @@
-( Целевой компилятор для компиляции SP-Forth v3.7x
+( Target compiler for SP-Forth v3.7x compilation
   Copyright [C] 1992-2000 A.Cherezov ac@forth.org
 
-  Компиляция в виртуальные адреса
-  Ю. Жиловец, 1.05.2007
+  Modified for target system
+  A. Shulitsky, 1.05.2007
 )
 
 \ ----------------------------------------------------
@@ -40,7 +40,7 @@ TARGET-POSIX [IF]
   S" src/tc-dl.f" INCLUDED
 [ELSE]
   HEX 
-  IMAGE-BASE 1034 + CONSTANT AddrOfLoadLibrary      \ адреса процедур в spf-stub.exe
+  IMAGE-BASE 1034 + CONSTANT AddrOfLoadLibrary      \ Addresses defined in spf-stub.exe
   IMAGE-BASE 1038 + CONSTANT AddrOfGetProcAddress
   DECIMAL
 [THEN]
@@ -98,7 +98,7 @@ VARIABLE SAVED-CURRENT
 ;
 
 VARIABLE TC-WINAPLINK
-VARIABLE TC-USER-OFFS 16 TC-USER-OFFS ! \ 16 байт зарезервировано
+VARIABLE TC-USER-OFFS 16 TC-USER-OFFS ! \ 16 bytes reserved
 
 : TC-USER-ALLOT ( n -- )
   TC-USER-OFFS +!
@@ -121,7 +121,7 @@ ONLY FORTH DEFINITIONS
 HEX
 
 : ALIGN-NOP ( n -- )
-\ выровнять на n и заполнить NOP
+\ Align to n with NOP padding
   DP @ DUP ROT 2DUP
   MOD ?DUP IF - + ELSE DROP THEN
   OVER - DUP ALLOT 90 FILL
@@ -156,10 +156,10 @@ TRUE TO ?C-JMP
 M\ ' DROP TO DTST
 
 : TC-CALL, ( addr -- )
-  \ так компилируется вызов слова в СП-Форте 3.0
+  \ For compatibility of this word with SP-Forth 3.0
   ?SET
   SetOP
-  0E8 C,              \ машинная команда CALL
+  0E8 C,              \ Compile relative CALL
   DP @ CELL+ - ,
   DP @ TO LAST-HERE
 ;
@@ -197,13 +197,13 @@ M\ ' DROP TO DTST
   084 TO J_COD
   ???BR-OPT
   SetJP  SetOP
-  J_COD    \  JX без 0x0F
-  0x0F     \  кусок от JX
+  J_COD    \  JX before 0x0F
+  0x0F     \  prefix for JX
   C, C,
   DUP IF DP @ CELL+ - THEN , DP @ TO LAST-HERE
 ;
 
-: TC-BRANCH, ( ADDR -> ) \ скомпилировать инструкцию ADDR JMP
+: TC-BRANCH, ( ADDR -> ) \ Unconditional jump ADDR JMP
   ?SET SetOP SetJP E9 C,
   DP @ CELL+ - ,    DP @ TO LAST-HERE
 ;
@@ -228,20 +228,20 @@ M\ ' DROP TO DTST
 DECIMAL
 
 : TC-LITERAL \ 94 CORE
-\ Интерпретация: семантика неопределена.
-\ Компиляция: ( x -- )
-\ Добавить семантику времени выполнения, данную ниже, к текущему определению.
-\ Время выполнения: ( -- x )
-\ Положить x на стек.
+\ Interpretation: Semantics undefined.
+\ Compilation: ( x -- )
+\ Append run-time semantics below, removing x from stack.
+\ Run-time: ( -- x )
+\ Place x on stack.
   STATE @ IF TC-LIT, THEN
 ; IMMEDIATE
 
 : TC-2LITERAL \ 94 DOUBLE
-\ Интерпретация: семантика неопределена.
-\ Компиляция: ( x1 x2 -- )
-\ Добавить семантику времени выполнения, данную ниже, к текущему определению.
-\ Время выполнения: ( -- x1 x2 )
-\ Положить пару ячеек x1 x2 на стек.
+\ Interpretation: Semantics undefined.
+\ Compilation: ( x1 x2 -- )
+\ Append run-time semantics below, removing cells from stack.
+\ Run-time: ( -- x1 x2 )
+\ Place double cell x1 x2 on stack.
   STATE @ IF TC-2LIT, THEN
 ; IMMEDIATE
 
@@ -252,7 +252,7 @@ DECIMAL
 ;
 
 : TC-?SLITERAL ( c-addr u -> ... )
-  \ преобразовать строку в число
+  \ Hexadecimal literal parsing
   2DUP 2 MIN S" 0x" COMPARE 0= 
   IF HEX-TC-LITERAL EXIT THEN
 
@@ -276,14 +276,14 @@ VARIABLE _VOC-LIST ' _VOC-LIST TO VOC-LIST
     SWAP ROT SWAP
 ;
 
-: S", ( addr u -- ) \ компиляция строки, заданной addr u, в виде строки со счетчиком
+: S", ( addr u -- ) \ Compile string (addr u) as counted string at HERE
   DUP C, DP @ SWAP DUP ALLOT CMOVE
 ;
 
-: +SWORD ( addr u wid -> ) \ добавление заголовка статьи с именем,
-         \ заданным строкой addr u, к списку, заданному wid.
-         \ Формирует только поля имени и связи с
-         \ отведением памяти по ALLOT.
+: +SWORD ( addr u wid -> ) \ Add header of word with name (addr u)
+         \ to wordlist specified by wid.
+         \ Header must be already linked and
+         \ dictionary pointer updated via ALLOT.
   HERE LAST !
   HERE 2SWAP S", SWAP DUP @ , !
 ;
@@ -302,7 +302,7 @@ ALIGN-BYTES-CONSTANT ALIGN-BYTES !
   THEN
   CURRENT @ +SWORD
   ALIGN
-  HERE SWAP ! ( заполнили cfa )
+  HERE SWAP ! ( set cfa )
 ;
 
 : HEADER
@@ -318,10 +318,10 @@ ALSO ASSEMBLER ALSO ASM-HIDDEN
 ;
 PREVIOUS PREVIOUS
 
-VOCABULARY TC     \ слова, работающие в режиме интерпретации при ЦК
-VOCABULARY TC-IMM \ immediate-слова для режима компиляции при ЦК,
-                  \ вынесены в отдельный словарь, т.к. их нельзя
-                  \ переопределять словами из TC-TRG
+VOCABULARY TC     \ Words compiled during target system generation
+VOCABULARY TC-IMM \ Immediate words for target compilation generation,
+                  \ used during compilation, i.e. they should not
+                  \ interfere with definitions from TC-TRG
 
 ALSO TC DEFINITIONS PREVIOUS
 \ NB: TC is absent in the search order
@@ -341,7 +341,7 @@ LATEST-NAME NAME>  ALSO ASSEMBLER  IS END-CODE  PREVIOUS
 
 : CODE1 ( "<spaces>name" -- )
   CODE-ORIG
-  \ NB: заканчивать определение через ";C"
+  \ NB: Terminated by special word ";C"
 ;
 
 : CREATE ( "<spaces>name" -- ) \ 94
@@ -358,7 +358,7 @@ LATEST-NAME NAME>  ALSO ASSEMBLER  IS END-CODE  PREVIOUS
   CREATE-CODE COMPILE,
   ,
 ;
-: USER ( "<spaces>name" -- ) \ локальные переменные потока
+: USER ( "<spaces>name" -- ) \ Allocate thread-local variable
   [T] HEADER [I]
   USER-CODE COMPILE,
   TC-USER-ALIGNED SWAP ,
@@ -408,11 +408,11 @@ LATEST-NAME NAME>  ALSO ASSEMBLER  IS END-CODE  PREVIOUS
 
 : WORDLIST
   HERE VOC-LIST @ , VOC-LIST !
-  HERE 0 , \ здесь будет указатель на имя последнего слова списка
-       0 , \ здесь будет указатель на имя списка для именованых
-       0 , \ wid словаря-предка
-       0 , \ класс словаря = wid словаря, определяющего свойства данного
-       0 , \ reserved, для расширений
+  HERE 0 , \ Will point to name of last word added
+       0 , \ Will point to name for VOCABULARY
+       0 , \ wid of parent wordlist
+       0 , \ Wordlist number = wid of vocabulary containing this wordlist
+       0 , \ reserved for extension
 ;
 
 : VOC-NAME! ( c-addr wid --   )  CELL+ ! ;
@@ -434,7 +434,7 @@ S" src/tc-dl-tc.f" INCLUDED
 
 ALSO TC
 
-: WINAPI: ( "ИмяПроцедуры" "ИмяБиблиотеки" -- )
+: WINAPI: ( "function-name" "library-name" -- )
   >IN @ [T] HEADER [I]  >IN !
   WINAPI-CODE COMPILE,
   HERE >R
@@ -442,11 +442,11 @@ ALSO TC
   0 , \ address of library name
   0 , \ address of function name
   -1 , \ # of parameters
-  HERE TC-WINAPLINK @ , TC-WINAPLINK ! ( связь )
+  HERE TC-WINAPLINK @ , TC-WINAPLINK ! ( link )
   HERE DUP R@ CELL+ CELL+ !
-  PARSE-NAME HERE SWAP DUP ALLOT MOVE 0 C, \ имя функции
+  PARSE-NAME HERE SWAP DUP ALLOT MOVE 0 C, \ function name
   HERE DUP R> CELL+ !
-  PARSE-NAME HERE SWAP DUP ALLOT MOVE 0 C, \ имя библиотеки
+  PARSE-NAME HERE SWAP DUP ALLOT MOVE 0 C, \ library name
   LoadLibraryA DUP 0= ABORT" Library not found"
   GetProcAddress 0= ABORT" Procedure not found"
 ;
@@ -455,9 +455,9 @@ PREVIOUS
 
 [THEN]
 
-(  Отличие от WNDPROC - на выходе не вызываем USER-EXIT, 
-   потому что при завершении процесса нет необходимости вызывать AT-THREAD-FINISHING,
-   AT-PROCESS-FINISHING вызовется в BYE в конце INIT
+(  Exit from WNDPROC - should not call USER-EXIT,
+   because these actions are performed at thread completion via AT-THREAD-FINISHING,
+   AT-PROCESS-FINISHING placed in BYE and in INIT
    ~day  )
 
 TARGET-POSIX [IF]
@@ -523,13 +523,13 @@ TARGET-POSIX [IF]
 : :  [T] : ALSO TC-IMM ;
 
 (
- Во время компиляции "двоеточечного" определения в ЦК порядок поиска
- представляет собой такой пирог:
+ At the time of "target compilation" definition in TC search order
+ the following vocabularies are present:
 
-  TC-IMM    \ imm-слова управления, которые опасно переопределять
-  TC-TRG     \ создаваемый целевой список слов, он же в CURRENT
-  TC        \ словарь определяющих слов ЦК - ":", CREATE, CONSTANT, etc
-  FORTH     \ основной словарь инструментальной форт-системы
+  TC-IMM    \ imm-words of compiler, which should execute immediately
+  TC-TRG     \ Compiled target system words, but not in CURRENT
+  TC        \ Target compilation defining words - ":", CREATE, CONSTANT, etc
+  FORTH     \ Standard Forth system host-compiler
 )
 
 ALSO TC-IMM DEFINITIONS PREVIOUS
@@ -566,7 +566,7 @@ ALSO TC-IMM DEFINITIONS PREVIOUS
 
 : C"   \ 94 CORE EXT
   [CHAR] " WORD DUP COUNT NIP 1+
-  DUP ALLOCATE THROW DUP >R SWAP CMOVE R>   \ WORD кладёт строку в HERE :(
+  DUP ALLOCATE THROW DUP >R SWAP CMOVE R>   \ WORD leaves string at HERE :(
   STATE @
   IF DUP [ ALSO TC-IMM ] [COMPILE] CLITERAL [ PREVIOUS ] FREE THROW THEN
 
@@ -621,7 +621,7 @@ C" SHERE-TAB-CUR" FIND NIP
 ; IMMEDIATE
 
 : UNTIL \ 94
-  ?COMP 3 <> IF -2004 THROW THEN \ ABORT" UNTIL без BEGIN !"
+  ?COMP 3 <> IF -2004 THROW THEN \ ABORT" UNTIL without BEGIN!"
   TC-?BRANCH,
   0xFFFFFF80  DP @ 4 - @  U<
   IF  DP @ 5 - W@ 0x3F0 + DP @ 6 - W!   -4 ALLOT
@@ -645,10 +645,10 @@ C" SHERE-TAB-CUR" FIND NIP
 
 : THEN  ?COMP  TC>RESOLVE ; IMMEDIATE
 
-: REPEAT 
-\ Продолжить выполнение с позиции, заданной dest.
+: REPEAT
+\ Unconditional jump to address marked dest.
   ?COMP
-  3 <> IF -2005 THROW THEN \ ABORT" REPEAT без BEGIN !"
+  3 <> IF -2005 THROW THEN \ ABORT" REPEAT without BEGIN!"
   DUP DP @ 2+ - DUP
   SHORT?
   IF SetJP 0xEB C, C, DROP
@@ -754,7 +754,7 @@ HEX
 : THROW
      STATE @ IF
      OPT_INIT OP0 @ C@ 0xB8 = 0 AND
-     IF  0xE9 C,              \ машинная команда JMP
+     IF  0xE9 C,              \ Compile relative JMP
          THROW-CODE  DP @ CELL+ - ,
 \          DP @ TO LAST-HERE
          EXIT 
@@ -778,12 +778,12 @@ TARGET-POSIX [IF]
 S" src/tc-dl-imm.f" INCLUDED
 [THEN]
 
-HERE 10000 + 10000 / 10000 * 2000 + DP !    \ выравнивание
+HERE 10000 + 10000 / 10000 * 2000 + DP !    \ Alignment
 DECIMAL
 
 IMAGE-START virtual-address
 
-\ *** поехали! ***
+\ *** Attention! ***
 ONLY FORTH DEFINITIONS ALSO TC
 
 ' TC-?SLITERAL TO ?SLITERAL
